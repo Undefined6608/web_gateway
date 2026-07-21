@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { CopyOutlined, EyeInvisibleOutlined, EyeOutlined, KeyOutlined, LockOutlined, SafetyCertificateOutlined, UserOutlined } from '@ant-design/icons'
 import { Alert, Button, Empty, Form, Input, Modal, Tag, Tooltip, message } from 'antd'
 import axios from 'axios'
-import { api, errorMessage } from '../../services/api'
+import { api, auth, credentialRevealSession, errorMessage } from '../../services/api'
 import type { Endpoint, RevealedSystemAccount } from '../../types/api'
 
 const REVEAL_SECONDS = 60
@@ -12,14 +12,18 @@ export function AccountRevealDialog({ endpoint, systemName }: { endpoint: Endpoi
   const [loading, setLoading] = useState(false)
   const [accounts, setAccounts] = useState<RevealedSystemAccount[]>([])
   const [authenticated, setAuthenticated] = useState(false)
+  const [automaticLoading, setAutomaticLoading] = useState(false)
   const [visibleIds, setVisibleIds] = useState<Set<number>>(() => new Set())
   const [remaining, setRemaining] = useState(REVEAL_SECONDS)
   const [form] = Form.useForm<{ username: string; password: string }>()
   const expiresAtRef = useRef(0)
+  const requestVersionRef = useRef(0)
 
   const clearSensitiveData = useCallback(() => {
+    requestVersionRef.current += 1
     setAccounts([])
     setAuthenticated(false)
+    setAutomaticLoading(false)
     setVisibleIds(new Set())
     setRemaining(REVEAL_SECONDS)
     expiresAtRef.current = 0
@@ -47,6 +51,7 @@ export function AccountRevealDialog({ endpoint, systemName }: { endpoint: Endpoi
   }, [accounts.length, clearSensitiveData])
 
   useEffect(() => () => {
+    requestVersionRef.current += 1
     expiresAtRef.current = 0
     form.resetFields()
   }, [form])
@@ -63,11 +68,15 @@ export function AccountRevealDialog({ endpoint, systemName }: { endpoint: Endpoi
     return () => window.removeEventListener('gateway:account-reveal-open', closeWhenAnotherSystemOpens)
   }, [clearSensitiveData, endpoint.id])
 
-  const authenticate = async () => {
-    const credentials = await form.validateFields()
+  const loadAccounts = async (credentials?: { username: string; password: string }, automatic = false) => {
+    const requestVersion = ++requestVersionRef.current
+    const usedJwt = !!auth.token()
+    const usedTemporaryToken = !usedJwt && !!credentialRevealSession.token()
     setLoading(true)
+    if (automatic) setAutomaticLoading(true)
     try {
       const revealed = await api.revealAccounts(endpoint.id, credentials)
+      if (requestVersion !== requestVersionRef.current) return
       form.resetFields()
       setAccounts(revealed)
       setAuthenticated(true)
@@ -75,12 +84,37 @@ export function AccountRevealDialog({ endpoint, systemName }: { endpoint: Endpoi
       setRemaining(REVEAL_SECONDS)
       expiresAtRef.current = Date.now() + REVEAL_SECONDS * 1000
     } catch (error) {
-      form.setFieldValue('password', '')
-      if (axios.isAxiosError(error) && error.response?.status === 401) message.error('认证失败，请检查管理员凭据')
+      if (requestVersion !== requestVersionRef.current) return
+      if (credentials) form.setFieldValue('password', '')
+      if (axios.isAxiosError(error) && error.response?.status === 401 && usedTemporaryToken) {
+        setAuthenticated(false)
+        message.info('临时查看凭据已失效，请重新验证')
+      }
+      else if (axios.isAxiosError(error) && error.response?.status === 401 && usedJwt) {
+        close()
+      }
+      else if (axios.isAxiosError(error) && error.response?.status === 401) message.error('认证失败，请检查管理员凭据')
       else if (axios.isAxiosError(error) && error.response?.status === 423) message.error(error.response.data?.message || '账号已封禁，请 15 分钟后重试')
       else if (axios.isAxiosError(error) && error.response?.status === 429) message.error('失败次数过多，请 5 分钟后再试')
       else message.error(errorMessage(error))
-    } finally { setLoading(false) }
+    } finally {
+      if (requestVersion === requestVersionRef.current) {
+        setLoading(false)
+        setAutomaticLoading(false)
+      }
+    }
+  }
+
+  const authenticate = async () => {
+    const credentials = await form.validateFields()
+    await loadAccounts(credentials)
+  }
+
+  const openDialog = () => {
+    clearSensitiveData()
+    setOpen(true)
+    window.dispatchEvent(new CustomEvent('gateway:account-reveal-open', { detail: endpoint.id }))
+    if (auth.token() || credentialRevealSession.token()) void loadAccounts(undefined, true)
   }
 
   const toggleVisible = (id: number) => setVisibleIds(current => {
@@ -97,9 +131,9 @@ export function AccountRevealDialog({ endpoint, systemName }: { endpoint: Endpoi
   }
 
   return <>
-    <Tooltip title="查看账号密码"><Button className="reveal-account-button" size="small" aria-label="查看账号密码" icon={<KeyOutlined />} onClick={() => { setOpen(true); window.dispatchEvent(new CustomEvent('gateway:account-reveal-open', { detail: endpoint.id })) }} /></Tooltip>
+    <Tooltip title="查看账号密码"><Button className="reveal-account-button" size="small" aria-label="查看账号密码" icon={<KeyOutlined />} onClick={openDialog} /></Tooltip>
     <Modal className="account-reveal-modal" open={open} title={<span className="reveal-modal-title"><SafetyCertificateOutlined />{systemName}账号认证</span>} onCancel={close} footer={null} width={680} destroyOnHidden maskClosable={!loading} keyboard={!loading}>
-      {!authenticated ? <div className="reveal-auth-step">
+      {automaticLoading ? <div className="reveal-auto-loading"><KeyOutlined /><strong>正在读取当前地址账号</strong><span>已使用当前有效凭据，无需再次输入管理员密码</span></div> : !authenticated ? <div className="reveal-auth-step">
         <div className="reveal-endpoint-context"><Tag>{endpoint.endpoint_type === 'online' ? '线上地址' : '测试地址'}</Tag><div><strong>{endpoint.url}</strong><span>{endpoint.remark || '无网址备注'}</span></div></div>
         <p>输入本程序管理员凭据，验证通过后可临时查看当前地址的启用账号。</p>
         <Form form={form} layout="vertical" requiredMark={false} onFinish={authenticate} autoComplete="off">

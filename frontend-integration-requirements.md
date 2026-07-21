@@ -42,13 +42,16 @@ Authorization: Bearer <access_token>
 
 查看账号密码交互：
 
-- 每条地址右侧显示按钮；点击后保存当前地址的 `endpoint_id`，打开二次认证弹窗。
-- 弹窗显示当前地址类型、URL 和备注，要求输入本程序的管理员用户名和密码。
-- 不要求用户提前登录，也不签发或保存 JWT。
+- 每条地址右侧显示按钮；点击后保存当前地址的 `endpoint_id`。
+- 已存在有效管理员 JWT 时直接请求并展示结果，不打开二次认证弹窗。
+- 未登录但当前标签页保存有未过期的临时查看令牌时，直接携带令牌请求，不打开二次认证弹窗。
+- 只有 JWT 和临时令牌均不存在时才打开弹窗；弹窗显示当前地址类型、URL 和备注，并要求输入本程序的管理员用户名和密码。
+- 临时验证不会签发 JWT，也不会让用户进入管理页面。
 - 验证成功后只显示当前地址所有启用账号的角色、账号、密码和备注。
 - 返回空数组时显示“当前地址暂无可用账号”，不要继续请求同一系统的其他地址。
 - 密码默认遮罩，可提供单次显示和复制按钮。
 - 管理员密码不得写入前端状态持久层、浏览器存储、URL、日志或埋点。
+- 临时查看令牌及过期时间最多保存到当前标签页的 `sessionStorage`，禁止使用 `localStorage`；退出管理登录时也应一并清除临时查看令牌。
 - 返回的系统密码不得写入 `localStorage`、`sessionStorage`、IndexedDB、Service Worker Cache 或前端日志。
 - 关闭弹窗、切换系统或离开页面时立即清除明文数据；建议最多显示 60 秒后自动清除。
 - 认证失败显示通用错误，不区分用户名不存在或密码错误。
@@ -251,19 +254,59 @@ GET /api/systems/{id}
 
 响应对象结构与列表中的单个系统一致。
 
-### 6.3 未登录查看当前地址账号密码
+### 6.3 查看当前地址账号密码
 
 ```http
 POST /api/endpoints/{endpoint_id}/accounts/reveal
 ```
 
-请求：
+鉴权优先级由前端按以下顺序选择，不要同时发送多种凭证：
+
+1. 已登录管理员：请求头传 `Authorization: Bearer <access_token>`，请求体传 `{}`。
+2. 未登录但已有临时令牌：请求头传 `X-Credential-Reveal-Token: <token>`，请求体传 `{}`。
+3. 首次查看或临时令牌已失效：请求体传管理员账号密码。
+
+首次验证请求：
 
 ```json
 {
   "username": "admin",
   "password": "administrator-password"
 }
+```
+
+首次验证成功响应头：
+
+```http
+X-Credential-Reveal-Token: <random-token>
+X-Credential-Reveal-Expires-In: 1800
+```
+
+前端收到响应后记录绝对过期时间：
+
+```ts
+const token = response.headers.get("X-Credential-Reveal-Token");
+const expiresIn = Number(
+  response.headers.get("X-Credential-Reveal-Expires-In") ?? "0",
+);
+
+if (token && expiresIn > 0) {
+  sessionStorage.setItem("credentialRevealToken", token);
+  sessionStorage.setItem(
+    "credentialRevealExpiresAt",
+    String(Date.now() + expiresIn * 1000),
+  );
+}
+```
+
+再次查看其他地址：
+
+```http
+POST /api/endpoints/{endpoint_id}/accounts/reveal
+X-Credential-Reveal-Token: <token>
+Content-Type: application/json
+
+{}
 ```
 
 成功响应：
@@ -281,7 +324,9 @@ POST /api/endpoints/{endpoint_id}/accounts/reveal
 ]
 ```
 
-接口只返回当前地址下的已启用账号。`endpoint_id` 必须来自用户点击的地址对象，禁止传系统 ID。响应设置为不可缓存，前端仍必须在弹窗关闭、地址切换或 60 秒超时后主动清除响应对象。该接口不会返回 JWT，也不会让用户进入管理页面。
+接口只返回当前地址下的已启用账号。`endpoint_id` 必须来自用户点击的地址对象，禁止传系统 ID。响应设置为不可缓存，前端仍必须在弹窗关闭、地址切换或 60 秒超时后主动清除账号密码响应对象。
+
+临时令牌固定 30 分钟过期，每次使用不会延长时间，并且只允许调用此查看接口。使用临时令牌收到 `401` 时，立即清除 `credentialRevealToken` 和 `credentialRevealExpiresAt`，然后打开验证弹窗；不要自动重放管理员原始密码。使用 JWT 收到 `401` 时，按统一登录失效流程处理。页面初始化时如果本地过期时间已到，也要先清除临时令牌。
 
 ### 6.4 重新检测地址
 

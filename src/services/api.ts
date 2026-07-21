@@ -4,6 +4,32 @@ import type { ApiErrorBody, Endpoint, GatewaySystem, LoginResponse, Person, Reve
 
 const TOKEN_KEY = 'gateway_access_token'
 const USER_KEY = 'gateway_user'
+const REVEAL_TOKEN_KEY = 'credentialRevealToken'
+const REVEAL_EXPIRES_AT_KEY = 'credentialRevealExpiresAt'
+
+export const credentialRevealSession = {
+  token: () => {
+    const token = sessionStorage.getItem(REVEAL_TOKEN_KEY)
+    const expiresAt = Number(sessionStorage.getItem(REVEAL_EXPIRES_AT_KEY) || 0)
+    if (!token || !expiresAt || expiresAt <= Date.now()) {
+      sessionStorage.removeItem(REVEAL_TOKEN_KEY)
+      sessionStorage.removeItem(REVEAL_EXPIRES_AT_KEY)
+      return null
+    }
+    return token
+  },
+  save: (token: string, expiresIn: number) => {
+    if (!token || expiresIn <= 0) return
+    sessionStorage.setItem(REVEAL_TOKEN_KEY, token)
+    sessionStorage.setItem(REVEAL_EXPIRES_AT_KEY, String(Date.now() + expiresIn * 1000))
+  },
+  clear: () => {
+    sessionStorage.removeItem(REVEAL_TOKEN_KEY)
+    sessionStorage.removeItem(REVEAL_EXPIRES_AT_KEY)
+  },
+}
+
+credentialRevealSession.token()
 
 export const auth = {
   token: () => sessionStorage.getItem(TOKEN_KEY),
@@ -50,7 +76,42 @@ export const api = {
   login: (body: { username: string; password: string }) => client.post<LoginResponse>('/api/auth/login', body).then(r => r.data),
   logout: () => client.post('/api/admin/auth/logout').then(() => undefined),
   systems: (admin = false) => client.get<GatewaySystem[]>(admin ? '/api/admin/systems' : '/api/systems').then(r => r.data),
-  revealAccounts: (endpointId: number, body: { username: string; password: string }) => client.post<RevealedSystemAccount[]>(`/api/endpoints/${endpointId}/accounts/reveal`, body, { headers: { 'Cache-Control': 'no-store' } }).then(r => r.data),
+  revealAccounts: async (endpointId: number, credentials?: { username: string; password: string }) => {
+    const jwt = auth.token()
+    const revealToken = jwt ? null : credentialRevealSession.token()
+    const headers: Record<string, string> = { 'Cache-Control': 'no-store' }
+    let authentication: 'jwt' | 'temporary' | 'credentials'
+
+    if (jwt) {
+      headers.Authorization = `Bearer ${jwt}`
+      authentication = 'jwt'
+    } else if (revealToken) {
+      headers['X-Credential-Reveal-Token'] = revealToken
+      authentication = 'temporary'
+    } else {
+      if (!credentials) throw new Error('credential_reveal_authentication_required')
+      authentication = 'credentials'
+    }
+
+    try {
+      const response = await client.post<RevealedSystemAccount[]>(`/api/endpoints/${endpointId}/accounts/reveal`, credentials || {}, { headers })
+      if (authentication === 'credentials') {
+        const token = response.headers['x-credential-reveal-token']
+        const expiresIn = Number(response.headers['x-credential-reveal-expires-in'] || 0)
+        if (typeof token === 'string' && expiresIn > 0) credentialRevealSession.save(token, expiresIn)
+      }
+      return response.data
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        if (authentication === 'temporary') credentialRevealSession.clear()
+        if (authentication === 'jwt') {
+          auth.clear()
+          window.dispatchEvent(new Event('gateway:unauthorized'))
+        }
+      }
+      throw error
+    }
+  },
   checkEndpoint: (id: number) => client.post<Endpoint>(`/api/endpoints/${id}/check`).then(r => r.data),
   createSystem: (body: Partial<GatewaySystem>) => client.post<GatewaySystem>('/api/admin/systems', body).then(r => r.data),
   updateSystem: (id: number, body: Partial<GatewaySystem>) => client.put<GatewaySystem>(`/api/admin/systems/${id}`, body).then(r => r.data),

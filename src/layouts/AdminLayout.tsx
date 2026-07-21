@@ -4,7 +4,7 @@ import { Button, Dropdown, Layout, Menu } from 'antd'
 import type { MenuProps } from 'antd'
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Brand } from '../components/common/Brand'
-import { api, auth } from '../services/api'
+import { api, auth, credentialRevealSession } from '../services/api'
 
 const { Content, Header, Sider } = Layout
 
@@ -21,7 +21,7 @@ export function AdminLayout() {
 
   const logout = async () => {
     try { await api.logout() } catch { /* Local logout still applies. */ }
-    finally { auth.clear(); navigate('/login', { replace: true }) }
+    finally { auth.clear(); credentialRevealSession.clear(); navigate('/login', { replace: true }) }
   }
   const menu: MenuProps['items'] = [
     { key: '/admin/systems', icon: <ApartmentOutlined />, label: '系统管理' },

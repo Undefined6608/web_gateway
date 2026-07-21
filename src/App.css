@@ -196,6 +196,11 @@
 .reveal-auth-step > p { margin: 0 0 22px; color: #66717e; font-size: 13px; line-height: 1.7; }
 .reveal-security-note { display: block; margin-top: 16px; color: #8a959e; font-size: 11px; text-align: center; }
 .reveal-security-note .anticon { margin-right: 5px; }
+.reveal-auto-loading { min-height: 190px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.reveal-auto-loading > .anticon { width: 42px; height: 42px; margin-bottom: 14px; display: grid; place-items: center; color: var(--accent); background: var(--accent-soft); border-radius: 6px; font-size: 18px; animation: reveal-key-pulse 1.4s ease-in-out infinite; }
+.reveal-auto-loading strong { color: #334751; font-size: 14px; }
+.reveal-auto-loading span { margin-top: 7px; color: #7c8992; font-size: 12px; }
+@keyframes reveal-key-pulse { 50% { opacity: .58; transform: scale(.96); } }
 .revealed-accounts .ant-alert { margin-bottom: 14px; }
 .revealed-account-list { margin-bottom: 18px; border: 1px solid #e2e8ec; border-radius: 6px; overflow: hidden; }
 .revealed-account { min-height: 78px; padding: 11px 14px; display: grid; grid-template-columns: minmax(180px, 1fr) minmax(220px, 1fr) 52px; align-items: center; gap: 16px; border-bottom: 1px solid #edf0f2; }

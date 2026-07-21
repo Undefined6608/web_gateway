@@ -17,6 +17,9 @@ export interface Endpoint {
   system_id: number
   endpoint_type: EndpointType
   url: string
+  requires_vpn: boolean
+  is_internal_network: boolean
+  remark: string | null
   check_status: CheckStatus
   last_http_status: number | null
   last_response_time_ms: number | null
@@ -34,8 +37,6 @@ export interface Developer {
 export interface GatewaySystem {
   id: number
   name: string
-  requires_vpn: boolean
-  is_internal_network: boolean
   lifecycle_status: LifecycleStatus
   owner_id: number | null
   description: string | null
@@ -49,18 +50,22 @@ export interface GatewaySystem {
 export interface SystemAccount {
   id: number
   system_id: number
+  endpoint_id: number
   role_name: string
   account_name: string
   is_enabled: boolean
+  remark: string | null
   created_at?: string
   updated_at?: string
 }
 
 export interface RevealedSystemAccount {
   id: number
+  endpoint_id: number
   role_name: string
   account_name: string
   password: string
+  remark: string | null
 }
 
 export interface LoginResponse {

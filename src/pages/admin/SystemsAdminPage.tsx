@@ -5,6 +5,7 @@ import {
   EditOutlined,
   PlusOutlined,
   SearchOutlined,
+  SettingOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -75,7 +76,7 @@ export function SystemsAdminPage() {
       title: "系统",
       dataIndex: "name",
       render: (name, row) => (
-        <button className="system-cell" onClick={() => setSelectedId(row.id)}>
+        <div className="system-cell">
           <span className="table-system-icon">
             <CloudServerOutlined />
           </span>
@@ -83,7 +84,7 @@ export function SystemsAdminPage() {
             <strong>{name}</strong>
             <small>{row.description || "暂无说明"}</small>
           </span>
-        </button>
+        </div>
       ),
     },
     {
@@ -105,15 +106,7 @@ export function SystemsAdminPage() {
     {
       title: "网络",
       width: 160,
-      render: (_, row) => (
-        <Space>
-          {row.requires_vpn && <Tag>VPN</Tag>}
-          {row.is_internal_network && <Tag>内网</Tag>}
-          {!row.requires_vpn && !row.is_internal_network && (
-            <span className="muted">公网</span>
-          )}
-        </Space>
-      ),
+      render: (_, row) => row.endpoints.length ? `${row.endpoints.filter(endpoint => endpoint.requires_vpn).length} VPN / ${row.endpoints.filter(endpoint => endpoint.is_internal_network).length} 内网` : <span className="muted">无地址</span>,
     },
     {
       title: "地址",
@@ -122,9 +115,16 @@ export function SystemsAdminPage() {
     },
     {
       title: "操作",
-      width: 112,
+      width: 148,
       render: (_, row) => (
         <Space>
+          <Tooltip title="系统配置">
+            <Button
+              type="text"
+              icon={<SettingOutlined />}
+              onClick={() => setSelectedId(row.id)}
+            />
+          </Tooltip>
           <Tooltip title="编辑">
             <Button
               type="text"

@@ -23,11 +23,10 @@ Authorization: Bearer <access_token>
 
 - 系统名称
 - 系统状态：维护、正常、已关闭
-- 是否需要 VPN
-- 是否为公司内部网络
 - 系统负责人
 - 页面、后端、数据开发人员
 - 线上地址、测试地址
+- 每个地址各自的 VPN、公司内网和备注
 - 地址最近检测状态、HTTP 状态码、响应耗时、检测时间和失败原因
 - 地址重新检测按钮
 - 查看系统账号密码按钮
@@ -200,8 +199,6 @@ GET /api/systems
   {
     "id": 1,
     "name": "订单系统",
-    "requires_vpn": true,
-    "is_internal_network": true,
     "lifecycle_status": "normal",
     "owner_id": 10,
     "description": "订单管理系统",
@@ -226,6 +223,9 @@ GET /api/systems
         "system_id": 1,
         "endpoint_type": "online",
         "url": "https://example.com",
+        "requires_vpn": true,
+        "is_internal_network": true,
+        "remark": "生产环境入口",
         "check_status": "healthy",
         "last_http_status": 200,
         "last_response_time_ms": 83,
@@ -270,9 +270,11 @@ POST /api/systems/{id}/accounts/reveal
 [
   {
     "id": 30,
+    "endpoint_id": 20,
     "role_name": "管理员",
     "account_name": "system-admin",
-    "password": "external-system-password"
+    "password": "external-system-password",
+    "remark": "生产管理员账号"
   }
 ]
 ```
@@ -311,8 +313,6 @@ POST /api/admin/systems
 ```json
 {
   "name": "订单系统",
-  "requires_vpn": true,
-  "is_internal_network": true,
   "lifecycle_status": "normal",
   "owner_id": 10,
   "description": "订单管理系统"
@@ -422,9 +422,11 @@ GET /api/admin/systems/{id}/accounts
   {
     "id": 30,
     "system_id": 1,
+    "endpoint_id": 20,
     "role_name": "管理员",
     "account_name": "system-admin",
     "is_enabled": true,
+    "remark": "生产管理员账号",
     "created_at": "2026-07-20T18:00:00.000",
     "updated_at": "2026-07-20T18:00:00.000"
   }
@@ -443,10 +445,12 @@ POST /api/admin/systems/{id}/accounts
 
 ```json
 {
+  "endpoint_id": 20,
   "role_name": "管理员",
   "account_name": "system-admin",
   "password": "external-system-password",
-  "is_enabled": true
+  "is_enabled": true,
+  "remark": "生产管理员账号"
 }
 ```
 
@@ -462,10 +466,12 @@ PUT /api/admin/systems/{system_id}/accounts/{account_id}
 
 ```json
 {
+  "endpoint_id": 20,
   "role_name": "管理员",
   "account_name": "system-admin",
   "password": null,
-  "is_enabled": true
+  "is_enabled": true,
+  "remark": "生产管理员账号"
 }
 ```
 
@@ -493,12 +499,17 @@ POST /api/admin/systems/{id}/endpoints
 ```json
 {
   "endpoint_type": "online",
-  "url": "https://example.com"
+  "url": "https://example.com",
+  "requires_vpn": true,
+  "is_internal_network": true,
+  "remark": "生产环境入口"
 }
 ```
 
 - 只允许 `http` 或 `https` URL。
 - 同一系统、同一地址类型已存在时执行更新。
+- VPN、公司内网和备注均属于当前地址。
+- 删除地址会同时删除关联账号，前端必须明确提示并二次确认。
 - 保存成功后后端立即请求一次该地址，并返回包含检测结果的地址对象。
 - 前端提交后应保持按钮加载状态，因为请求最长可能等待约 5 秒。
 
@@ -524,6 +535,8 @@ DELETE /api/admin/systems/{system_id}/endpoints/{endpoint_id}
 - 所有删除操作在前端二次确认。
 - 所有 `204` 响应均不执行 JSON 解析。
 - 导入功能使用 `multipart/form-data` 的 `file` 字段，限制 `.xlsx` 文件且前端限制文件大小不超过 10 MB。
+- 下载模板中的状态、是/否、地址类型和开发类型为固定下拉；系统名称和人员标识为动态关联下拉。新版 Excel 支持输入关键字搜索，旧版 Excel 可能只能展开选择。
+- 前端文件类型检查只用于改善体验，不能代替后端安全校验；不要尝试在浏览器执行工作簿宏、公式或外部链接。
 - 导入前提示会覆盖/新增系统数据，导入失败时展示后端返回的 Sheet、行号和中文错误信息。
 - 导入成功后刷新系统列表；地址检测结果可在稍后自动更新。
 - 导出文件不包含任何外部系统密码，账号 Sheet 的密码列为空属于正常安全行为。

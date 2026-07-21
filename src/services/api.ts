@@ -40,6 +40,7 @@ export function errorMessage(error: unknown) {
   const status = error.response?.status
   if (status === 429) return '检测过于频繁，请 10 秒后再试'
   if (status === 409) return '名称、账号或角色已存在'
+  if (status === 423) return error.response?.data?.message || '账号已封禁，请 15 分钟后重试'
   if (status === 404) return '数据不存在，列表已刷新'
   if (status === 500) return '服务暂时不可用，请稍后重试'
   return error.response?.data?.message || (error.code === 'ECONNABORTED' ? '请求超时，请检查服务状态' : '无法连接到网关服务')
@@ -63,6 +64,6 @@ export const api = {
   createAccount: (id: number, body: Partial<SystemAccount> & { password: string }) => client.post<SystemAccount>(`/api/admin/systems/${id}/accounts`, body).then(r => r.data),
   updateAccount: (systemId: number, accountId: number, body: Partial<SystemAccount> & { password: string | null }) => client.put<SystemAccount>(`/api/admin/systems/${systemId}/accounts/${accountId}`, body).then(r => r.data),
   deleteAccount: (systemId: number, accountId: number) => client.delete(`/api/admin/systems/${systemId}/accounts/${accountId}`).then(() => undefined),
-  saveEndpoint: (id: number, body: { endpoint_type: string; url: string }) => client.post<Endpoint>(`/api/admin/systems/${id}/endpoints`, body).then(r => r.data),
+  saveEndpoint: (id: number, body: { endpoint_type: string; url: string; requires_vpn: boolean; is_internal_network: boolean; remark: string | null }) => client.post<Endpoint>(`/api/admin/systems/${id}/endpoints`, body).then(r => r.data),
   deleteEndpoint: (systemId: number, endpointId: number) => client.delete(`/api/admin/systems/${systemId}/endpoints/${endpointId}`).then(() => undefined),
 }

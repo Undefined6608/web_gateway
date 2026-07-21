@@ -1,4 +1,4 @@
-import { CloudServerOutlined, LinkOutlined, SafetyCertificateOutlined, WifiOutlined } from '@ant-design/icons'
+import { CloudServerOutlined, LinkOutlined } from '@ant-design/icons'
 import { Tag } from 'antd'
 import { developerLabels, statusMeta } from '../../config/systemMeta'
 import type { DeveloperType, GatewaySystem } from '../../types/api'
@@ -11,7 +11,7 @@ export function SystemCard({ system, index, onCheck }: { system: GatewaySystem; 
   return <article className={`system-card ${system.lifecycle_status === 'closed' ? 'is-closed' : ''}`} style={{ '--delay': `${Math.min(index * 55, 330)}ms` } as React.CSSProperties}>
     <div className="system-card-head">
       <div className="system-identity"><div className="system-icon"><CloudServerOutlined /></div><div>{primaryEndpoint ? <h2><a href={primaryEndpoint.url} target="_blank" rel="noopener noreferrer" title={`打开${system.name}`}>{system.name}</a></h2> : <h2>{system.name}</h2>}<p>{system.description || '暂无系统说明'}</p></div></div>
-      <div className="system-card-actions"><div className="system-tags"><Tag className={`system-status system-status-${system.lifecycle_status}`}>{statusMeta[system.lifecycle_status].label}</Tag>{system.requires_vpn && <Tag className="system-network-vpn" icon={<SafetyCertificateOutlined />}>VPN</Tag>}{system.is_internal_network && <Tag className="system-network-internal" icon={<WifiOutlined />}>内网</Tag>}</div><AccountRevealDialog systemId={system.id} systemName={system.name} /></div>
+      <div className="system-card-actions"><div className="system-tags"><Tag className={`system-status system-status-${system.lifecycle_status}`}>{statusMeta[system.lifecycle_status].label}</Tag></div><AccountRevealDialog systemId={system.id} systemName={system.name} endpoints={system.endpoints} /></div>
     </div>
     <div className="system-people"><div><span>负责人</span><strong>{system.owner?.name || '未配置'}</strong></div>{(['page', 'backend', 'data'] as DeveloperType[]).map(type => <div key={type}><span>{developerLabels[type]}开发</span><strong>{developers(type)}</strong></div>)}</div>
     <div className="endpoint-list">{system.endpoints.length ? system.endpoints.map(endpoint => <EndpointRow key={endpoint.id} endpoint={endpoint} onCheck={id => onCheck(system.id, id)} />) : <div className="no-endpoint"><LinkOutlined /> 暂未配置访问地址</div>}</div>

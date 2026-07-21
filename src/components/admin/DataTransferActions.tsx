@@ -102,7 +102,7 @@ export function DataTransferActions({ onImported }: { onImported: () => void | P
 
     <Modal open={confirmOpen} title="确认导入系统数据" okText="开始导入" cancelText="取消" confirmLoading={importing} onOk={importSystems} onCancel={cancelImport} closable={!importing} maskClosable={!importing} keyboard={!importing}>
       {selectedFile && <div className="import-confirm-file"><FileExcelOutlined /><div><span>即将导入</span><strong>{selectedFile.name}</strong><small>{formatSize(selectedFile.size)}</small></div></div>}
-      <p className="import-confirm-note">文件将在内存中处理，任何校验或写入错误都会使本次操作整体回滚。地址导入成功后自动检测，检测异常不会回滚基础数据。</p>
+      <p className="import-confirm-note">导入会根据模板内容新增或覆盖系统数据。文件将在内存中处理，任何校验或写入错误都会使本次操作整体回滚。地址导入成功后自动检测，检测异常不会回滚基础数据。</p>
       <div className="import-security-checks"><strong>服务端安全检查</strong><ul><li>校验文件名、MIME、XLSX 签名和规定的 5 个 Sheet</li><li>禁止隐藏 Sheet、公式、宏、ActiveX、OLE、外部链接和自定义 XML</li><li>限制 ZIP 条目数量、单项与总解压大小</li><li>拒绝路径穿越、重复路径和符号链接</li></ul></div>
     </Modal>
 

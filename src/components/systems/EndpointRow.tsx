@@ -5,8 +5,9 @@ import dayjs from 'dayjs'
 import { checkMeta } from '../../config/systemMeta'
 import { errorMessage } from '../../services/api'
 import type { Endpoint } from '../../types/api'
+import { AccountRevealDialog } from './AccountRevealDialog'
 
-export function EndpointRow({ endpoint, onCheck }: { endpoint: Endpoint; onCheck: (id: number) => Promise<void> }) {
+export function EndpointRow({ endpoint, systemName, onCheck }: { endpoint: Endpoint; systemName: string; onCheck: (id: number) => Promise<void> }) {
   const [checking, setChecking] = useState(false)
   const [cooldown, setCooldown] = useState(0)
   const meta = checkMeta[endpoint.check_status]
@@ -35,6 +36,6 @@ export function EndpointRow({ endpoint, onCheck }: { endpoint: Endpoint; onCheck
     </div>
     <div className="endpoint-health"><div className="endpoint-flags">{endpoint.requires_vpn && <Tag className="system-network-vpn" icon={<SafetyCertificateOutlined />}>VPN</Tag>}{endpoint.is_internal_network && <Tag className="system-network-internal" icon={<WifiOutlined />}>内网</Tag>}</div><Tag icon={meta.icon} color={meta.color}>{meta.label}</Tag><span className="metric">{endpoint.last_http_status ?? '--'} HTTP</span><span className="metric">{endpoint.last_response_time_ms != null ? `${endpoint.last_response_time_ms} ms` : '-- ms'}</span></div>
     {endpoint.last_error && <Tooltip title={endpoint.last_error}><span className="endpoint-error"><ExclamationCircleFilled /> 失败原因</span></Tooltip>}
-    <Tooltip title={cooldown ? `${cooldown} 秒后可重试` : '重新检测'}><Button className="icon-action" aria-label="重新检测" icon={checking ? <LoadingOutlined /> : <ReloadOutlined />} disabled={checking || cooldown > 0} onClick={check} /></Tooltip>
+    <div className="endpoint-actions"><AccountRevealDialog endpoint={endpoint} systemName={systemName} /><Tooltip title={cooldown ? `${cooldown} 秒后可重试` : '重新检测'}><Button className="icon-action" aria-label="重新检测" icon={checking ? <LoadingOutlined /> : <ReloadOutlined />} disabled={checking || cooldown > 0} onClick={check} /></Tooltip></div>
   </div>
 }

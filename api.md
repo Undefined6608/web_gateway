@@ -15,7 +15,7 @@ Authorization: Bearer <access_token>
 | `POST` | `/api/auth/login`                    | 管理员登录并获取 JWT               |
 | `GET`  | `/api/systems`                       | 展示全部系统，不查询系统账号表     |
 | `GET`  | `/api/systems/{id}`                  | 展示系统详情，不返回密码           |
-| `POST` | `/api/systems/{id}/accounts/reveal` | 二次验证管理员后查看启用账号密码   |
+| `POST` | `/api/endpoints/{endpoint_id}/accounts/reveal` | 二次验证管理员后查看当前地址账号密码 |
 | `POST` | `/api/endpoints/{endpoint_id}/check` | 重新检测地址，Redis 限制 10 秒一次 |
 
 登录请求：
@@ -56,10 +56,10 @@ Authorization: Bearer <access_token>
 
 系统账号的创建请求包含明文 `password`，只允许通过 HTTPS 发送。服务收到后立即使用 AES-256-GCM 加密，查询账号接口只返回账号、角色和启用状态，永不返回密文或明文密码。
 
-## 未登录查看系统账号
+## 未登录查看当前地址账号
 
 ```http
-POST /api/systems/{id}/accounts/reveal
+POST /api/endpoints/{endpoint_id}/accounts/reveal
 Content-Type: application/json
 ```
 
@@ -72,7 +72,7 @@ Content-Type: application/json
 }
 ```
 
-成功响应只包含该系统已启用的账号：
+路径参数必须传递用户点击的地址 `endpoint_id`。成功响应只包含该地址下已启用的账号，不会返回同一系统其他地址的账号：
 
 ```json
 [
@@ -90,7 +90,7 @@ Content-Type: application/json
 - 此接口不签发 JWT，也不会改变当前登录状态。
 - 连续失败超过 5 次后，Redis 限制该管理员用户名 5 分钟。
 - 响应包含 `Cache-Control: no-store` 和 `Pragma: no-cache`。
-- 返回内容不写入日志，日志只记录管理员 ID、系统 ID 和账号数量。
+- 返回内容不写入日志，日志只记录管理员 ID、系统 ID、地址 ID 和账号数量。
 - 只能通过 HTTPS 调用，前端不得持久化管理员原始密码或返回的系统密码。
 
 ## 状态值

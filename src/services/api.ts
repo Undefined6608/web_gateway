@@ -50,7 +50,7 @@ export const api = {
   login: (body: { username: string; password: string }) => client.post<LoginResponse>('/api/auth/login', body).then(r => r.data),
   logout: () => client.post('/api/admin/auth/logout').then(() => undefined),
   systems: (admin = false) => client.get<GatewaySystem[]>(admin ? '/api/admin/systems' : '/api/systems').then(r => r.data),
-  revealAccounts: (id: number, body: { username: string; password: string }) => client.post<RevealedSystemAccount[]>(`/api/systems/${id}/accounts/reveal`, body, { headers: { 'Cache-Control': 'no-store' } }).then(r => r.data),
+  revealAccounts: (endpointId: number, body: { username: string; password: string }) => client.post<RevealedSystemAccount[]>(`/api/endpoints/${endpointId}/accounts/reveal`, body, { headers: { 'Cache-Control': 'no-store' } }).then(r => r.data),
   checkEndpoint: (id: number) => client.post<Endpoint>(`/api/endpoints/${id}/check`).then(r => r.data),
   createSystem: (body: Partial<GatewaySystem>) => client.post<GatewaySystem>('/api/admin/systems', body).then(r => r.data),
   updateSystem: (id: number, body: Partial<GatewaySystem>) => client.put<GatewaySystem>(`/api/admin/systems/${id}`, body).then(r => r.data),

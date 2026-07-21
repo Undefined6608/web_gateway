@@ -30,6 +30,16 @@ export interface Endpoint {
   updated_at?: string
 }
 
+export interface SaveEndpointPayload {
+  endpoint_id?: number
+  endpoint_type: EndpointType
+  url: string
+  requires_vpn: boolean
+  is_internal_network: boolean
+  is_public_network: boolean
+  remark: string | null
+}
+
 export interface Developer {
   person: Pick<Person, 'id' | 'name'>
   developer_type: DeveloperType

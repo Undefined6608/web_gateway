@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios'
 import { APP_BASE_PATH } from '../config/app'
-import type { ApiErrorBody, Endpoint, EndpointType, GatewaySystem, LoginResponse, Person, RevealedSystemAccount, SystemAccount } from '../types/api'
+import type { ApiErrorBody, Endpoint, GatewaySystem, LoginResponse, Person, RevealedSystemAccount, SaveEndpointPayload, SystemAccount } from '../types/api'
 
 const TOKEN_KEY = 'gateway_access_token'
 const USER_KEY = 'gateway_user'
@@ -125,6 +125,6 @@ export const api = {
   createAccount: (id: number, body: Partial<SystemAccount> & { password: string }) => client.post<SystemAccount>(`/api/admin/systems/${id}/accounts`, body).then(r => r.data),
   updateAccount: (systemId: number, accountId: number, body: Partial<SystemAccount> & { password: string | null }) => client.put<SystemAccount>(`/api/admin/systems/${systemId}/accounts/${accountId}`, body).then(r => r.data),
   deleteAccount: (systemId: number, accountId: number) => client.delete(`/api/admin/systems/${systemId}/accounts/${accountId}`).then(() => undefined),
-  saveEndpoint: (id: number, body: { endpoint_type: EndpointType; url: string; requires_vpn: boolean; is_internal_network: boolean; is_public_network: boolean; remark: string | null }) => client.post<Endpoint>(`/api/admin/systems/${id}/endpoints`, body).then(r => r.data),
+  saveEndpoint: (id: number, body: SaveEndpointPayload) => client.post<Endpoint>(`/api/admin/systems/${id}/endpoints`, body).then(r => r.data),
   deleteEndpoint: (systemId: number, endpointId: number) => client.delete(`/api/admin/systems/${systemId}/endpoints/${endpointId}`).then(() => undefined),
 }

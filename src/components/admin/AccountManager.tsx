@@ -9,7 +9,7 @@ export function AccountManager({ system }: { system: GatewaySystem }) {
   const [editing, setEditing] = useState<SystemAccount | null | undefined>(undefined)
   const [form] = Form.useForm()
   const [saving, setSaving] = useState(false)
-  const endpointNames = useMemo(() => new Map(system.endpoints.map(endpoint => [endpoint.id, endpoint.endpoint_type === 'online' ? '线上地址' : '测试地址'])), [system.endpoints])
+  const endpointNames = useMemo(() => new Map(system.endpoints.map(endpoint => [endpoint.id, `${endpoint.endpoint_type === 'online' ? '线上' : '测试'} · ${endpoint.url}`])), [system.endpoints])
   const endpointOptions = system.endpoints.map(endpoint => ({ value: endpoint.id, label: `${endpoint.endpoint_type === 'online' ? '线上' : '测试'} · ${endpoint.url}` }))
   const load = useCallback(async () => { try { setAccounts(await api.accounts(system.id)) } catch (error) { message.error(errorMessage(error)) } }, [system.id])
   useEffect(() => { void load() }, [load])
@@ -34,7 +34,30 @@ export function AccountManager({ system }: { system: GatewaySystem }) {
   return <div className="manager-section">
     <div className="section-action"><Typography.Text type="secondary">账号必须关联一个地址。仅展示元数据，密码不会被读取或回填。</Typography.Text><Button icon={<PlusOutlined />} disabled={!system.endpoints.length} onClick={() => open(null)}>新增账号</Button></div>
     {!system.endpoints.length && <Typography.Paragraph type="warning">请先在“访问地址”中配置地址，再新增系统账号。</Typography.Paragraph>}
-    <Table size="small" rowKey="id" pagination={false} dataSource={accounts} columns={[{ title: '所属地址', dataIndex: 'endpoint_id', render: value => <Tag>{endpointNames.get(value) || '地址已删除'}</Tag> }, { title: '角色', dataIndex: 'role_name' }, { title: '账号', dataIndex: 'account_name' }, { title: '备注', dataIndex: 'remark', ellipsis: true, render: value => value || <span className="muted">无</span> }, { title: '状态', render: (_, row) => <Tag color={row.is_enabled ? 'success' : 'default'}>{row.is_enabled ? '启用' : '停用'}</Tag> }, { title: '', width: 92, render: (_, row) => <Space><Button type="text" icon={<EditOutlined />} onClick={() => open(row)} /><Popconfirm title="删除这个账号？" onConfirm={() => remove(row.id)}><Button danger type="text" icon={<DeleteOutlined />} /></Popconfirm></Space> }]} />
+    <Table
+      size="small"
+      rowKey="id"
+      tableLayout="fixed"
+      pagination={false}
+      scroll={{ x: 680 }}
+      dataSource={accounts}
+      columns={[
+        {
+          title: '所属地址',
+          dataIndex: 'endpoint_id',
+          width: 190,
+          render: value => {
+            const label = endpointNames.get(value) || '地址已删除'
+            return <Tag className="account-endpoint-tag" title={label}>{label}</Tag>
+          },
+        },
+        { title: '角色', dataIndex: 'role_name', width: 90, ellipsis: true },
+        { title: '账号', dataIndex: 'account_name', width: 130, ellipsis: true },
+        { title: '备注', dataIndex: 'remark', ellipsis: true, render: value => value || <span className="muted">无</span> },
+        { title: '状态', width: 70, render: (_, row) => <Tag color={row.is_enabled ? 'success' : 'default'}>{row.is_enabled ? '启用' : '停用'}</Tag> },
+        { title: '', width: 92, render: (_, row) => <Space><Button type="text" icon={<EditOutlined />} onClick={() => open(row)} /><Popconfirm title="删除这个账号？" onConfirm={() => remove(row.id)}><Button danger type="text" icon={<DeleteOutlined />} /></Popconfirm></Space> },
+      ]}
+    />
     <Modal open={editing !== undefined} title={editing ? '编辑账号' : '新增账号'} onCancel={() => setEditing(undefined)} onOk={save} confirmLoading={saving} okText="保存" cancelText="取消" destroyOnHidden><Form form={form} layout="vertical" requiredMark={false}><Form.Item name="endpoint_id" label="所属地址" rules={[{ required: true, message: '请选择所属地址' }]}><Select placeholder="选择线上或测试地址" options={endpointOptions} /></Form.Item><div className="form-grid"><Form.Item name="role_name" label="角色名称" rules={[{ required: true, message: '请输入角色名称' }]}><Input /></Form.Item><Form.Item name="account_name" label="账号名称" rules={[{ required: true, message: '请输入账号名称' }]}><Input /></Form.Item></div><Form.Item name="password" label={editing ? '新密码（留空则不修改）' : '密码'} rules={editing ? [] : [{ required: true, message: '请输入密码' }]}><Input.Password autoComplete="new-password" /></Form.Item><Form.Item name="remark" label="账号备注"><Input placeholder="例如：生产管理员账号" maxLength={200} /></Form.Item><Form.Item name="is_enabled" label="启用账号" valuePropName="checked"><Switch /></Form.Item></Form></Modal>
   </div>
 }

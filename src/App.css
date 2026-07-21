@@ -160,24 +160,32 @@
 .inline-form { padding: 15px; background: #f5f7f6; border: 1px solid #e5eae8; border-radius: 6px; margin-bottom: 20px; }
 .inline-form .ant-form { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; }
 .inline-form .ant-form-item { margin: 0; }
-.endpoint-form { margin-bottom: 20px; padding: 16px; background: #f5f7f7; border: 1px solid #e1e8e6; border-radius: 6px; }
+.endpoint-manager { display: grid; gap: 26px; }
+.endpoint-group + .endpoint-group { padding-top: 24px; border-top: 1px solid #e6ebe9; }
+.endpoint-group-header { min-height: 42px; margin-bottom: 14px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.endpoint-group-header h3 { margin: 0; color: #2c3935; font-size: 14px; line-height: 1.4; font-weight: 660; }
+.endpoint-group-header p { margin: 4px 0 0; color: #7a8782; font-size: 11px; line-height: 1.5; }
+.endpoint-group-empty { min-height: 58px; padding: 18px 14px; color: #8a9692; background: #fafbfb; border: 1px dashed #dbe2df; border-radius: 6px; font-size: 12px; }
+.endpoint-form { margin-bottom: 14px; padding: 16px; background: #f5f7f7; border: 1px solid #e1e8e6; border-radius: 6px; }
+.endpoint-form-title { margin-bottom: 14px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.endpoint-form-title strong { color: #35433e; font-size: 13px; }
+.endpoint-form-title span { color: #84908c; font: 10px/1.4 Consolas, monospace; }
 .endpoint-form .ant-form-item { margin-bottom: 14px; }
 .endpoint-form-main { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 12px; }
 .endpoint-form-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
-.endpoint-switches { display: flex; gap: 34px; }
+.endpoint-switches { display: flex; flex-wrap: wrap; gap: 18px 34px; }
 .endpoint-switches .ant-form-item { margin-bottom: 0; }
 .admin-endpoints { border: 1px solid #e6eae9; border-radius: 6px; overflow: hidden; }
 .admin-endpoints > div { min-height: 56px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid #edf0ef; }
 .admin-endpoints > div:last-child { border-bottom: 0; }
-.admin-endpoints a { color: #315d53; font-size: 13px; text-decoration: none; }
 .admin-endpoint-copy { min-width: 0; flex: 1; }
-.admin-endpoint-copy > div:first-child { display: flex; align-items: center; min-width: 0; gap: 8px; }
-.admin-endpoint-copy > div:first-child .ant-tag { margin-inline-end: 0; }
-.admin-endpoint-copy a { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.admin-endpoint-copy > span { display: block; margin: 4px 0 0 48px; color: #87938f; font-size: 11px; }
-.admin-endpoint-actions { flex: 0 0 auto; }
+.admin-endpoint-copy a { display: block; overflow: hidden; color: #315d53; font-size: 13px; text-decoration: none; text-overflow: ellipsis; white-space: nowrap; }
+.admin-endpoint-copy a:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.admin-endpoint-copy > span { display: block; margin-top: 4px; color: #87938f; font-size: 11px; }
+.admin-endpoint-actions { display: flex; align-items: center; flex: 0 0 auto; gap: 7px; }
 .admin-endpoint-flags { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
 .admin-endpoint-flags .ant-tag { margin: 0; }
+.account-endpoint-tag { display: block; width: 100%; max-width: 100%; margin-inline-end: 0; overflow: hidden; box-sizing: border-box; text-overflow: ellipsis; vertical-align: middle; white-space: nowrap; }
 .developer-manager { display: grid; gap: 18px; }
 .developer-manager > div { display: grid; grid-template-columns: 90px 1fr; align-items: center; gap: 12px; }
 .developer-manager label { color: #53605c; font-size: 13px; }
@@ -340,6 +348,8 @@
   .endpoint-form-foot { align-items: stretch; flex-direction: column; }
   .endpoint-switches { gap: 26px; }
   .admin-endpoints > div { align-items: flex-start; flex-direction: column; }
+  .admin-endpoint-actions { width: 100%; align-items: flex-start; justify-content: space-between; }
+  .admin-endpoint-flags { padding-top: 5px; }
   .ant-drawer { width: 100% !important; }
 }
 

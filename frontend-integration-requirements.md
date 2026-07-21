@@ -72,6 +72,7 @@ Authorization: Bearer <access_token>
 - 线上地址、测试地址配置和重新检测
 - 多角色账号新增、编辑、启用/停用、删除
 - 人员新增、编辑、删除
+- Excel 模板下载、系统数据导入和导出
 - 退出登录
 
 账号安全要求：
@@ -85,36 +86,36 @@ Authorization: Bearer <access_token>
 
 ### 3.1 系统状态
 
-| API 值 | 中文显示 |
-| --- | --- |
-| `normal` | 正常 |
-| `maintenance` | 维护 |
-| `closed` | 已关闭 |
+| API 值        | 中文显示 |
+| ------------- | -------- |
+| `normal`      | 正常     |
+| `maintenance` | 维护     |
+| `closed`      | 已关闭   |
 
 ### 3.2 地址类型
 
-| API 值 | 中文显示 |
-| --- | --- |
+| API 值   | 中文显示 |
+| -------- | -------- |
 | `online` | 线上地址 |
-| `test` | 测试地址 |
+| `test`   | 测试地址 |
 
 每个系统的每种地址最多一条。
 
 ### 3.3 地址检测状态
 
-| API 值 | 中文显示 | 建议表现 |
-| --- | --- | --- |
-| `unknown` | 未检测 | 中性状态 |
-| `healthy` | 正常 | 成功状态 |
-| `unhealthy` | 异常 | 错误状态 |
+| API 值      | 中文显示 | 建议表现 |
+| ----------- | -------- | -------- |
+| `unknown`   | 未检测   | 中性状态 |
+| `healthy`   | 正常     | 成功状态 |
+| `unhealthy` | 异常     | 错误状态 |
 
 ### 3.4 开发类型
 
-| API 值 | 中文显示 |
-| --- | --- |
-| `page` | 页面 |
-| `backend` | 后端 |
-| `data` | 数据 |
+| API 值    | 中文显示 |
+| --------- | -------- |
+| `page`    | 页面     |
+| `backend` | 后端     |
+| `data`    | 数据     |
 
 ## 4. 通用响应结构
 
@@ -123,18 +124,19 @@ Authorization: Bearer <access_token>
 ```json
 {
   "error": "invalid_input",
-  "message": "invalid lifecycle_status"
+  "message": "系统状态无效"
 }
 ```
 
-| HTTP 状态 | `error` | 前端处理 |
-| --- | --- | --- |
-| `400` | `invalid_input` | 展示字段或表单错误 |
-| `401` | `unauthorized` | 清除 JWT 并跳转登录页 |
-| `404` | `not_found` | 提示数据不存在并刷新列表 |
-| `409` | `conflict` | 提示名称或角色等数据重复 |
-| `429` | `rate_limited` | 禁止重复检测并稍后重试 |
-| `500` | `internal_error` | 展示通用错误，不显示服务端细节 |
+| HTTP 状态 | `error`          | 前端处理                       |
+| --------- | ---------------- | ------------------------------ |
+| `400`     | `invalid_input`  | 展示字段或表单错误             |
+| `401`     | `unauthorized`   | 清除 JWT 并跳转登录页          |
+| `404`     | `not_found`      | 提示数据不存在并刷新列表       |
+| `409`     | `conflict`       | 提示名称或角色等数据重复       |
+| `423`     | `account_locked` | 提示账号已封禁，15 分钟后重试  |
+| `429`     | `rate_limited`   | 禁止重复检测并稍后重试         |
+| `500`     | `internal_error` | 展示通用错误，不显示服务端细节 |
 
 ### 4.2 删除响应
 
@@ -521,3 +523,7 @@ DELETE /api/admin/systems/{system_id}/endpoints/{endpoint_id}
 - 系统状态、开发类型、地址类型均使用本文档规定的 API 值。
 - 所有删除操作在前端二次确认。
 - 所有 `204` 响应均不执行 JSON 解析。
+- 导入功能使用 `multipart/form-data` 的 `file` 字段，限制 `.xlsx` 文件且前端限制文件大小不超过 10 MB。
+- 导入前提示会覆盖/新增系统数据，导入失败时展示后端返回的 Sheet、行号和中文错误信息。
+- 导入成功后刷新系统列表；地址检测结果可在稍后自动更新。
+- 导出文件不包含任何外部系统密码，账号 Sheet 的密码列为空属于正常安全行为。

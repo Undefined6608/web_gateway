@@ -70,4 +70,12 @@ export interface LoginResponse {
   user: { id: number; username: string; display_name: string }
 }
 
+export interface ImportSummary {
+  systems: number
+  endpoints: number
+  accounts: number
+  people: number
+  developers: number
+}
+
 export interface ApiErrorBody { error?: string; message?: string }

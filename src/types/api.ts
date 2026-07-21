@@ -56,6 +56,13 @@ export interface SystemAccount {
   updated_at?: string
 }
 
+export interface RevealedSystemAccount {
+  id: number
+  role_name: string
+  account_name: string
+  password: string
+}
+
 export interface LoginResponse {
   access_token: string
   token_type: string

@@ -1,5 +1,6 @@
 import axios, { AxiosError } from 'axios'
-import type { ApiErrorBody, Endpoint, GatewaySystem, LoginResponse, Person, SystemAccount } from '../types/api'
+import { APP_BASE_PATH } from '../config/app'
+import type { ApiErrorBody, Endpoint, GatewaySystem, LoginResponse, Person, RevealedSystemAccount, SystemAccount } from '../types/api'
 
 const TOKEN_KEY = 'gateway_access_token'
 const USER_KEY = 'gateway_user'
@@ -20,7 +21,7 @@ export const auth = {
   },
 }
 
-const client = axios.create({ baseURL: import.meta.env.VITE_API_BASE_URL || '', timeout: 12000 })
+const client = axios.create({ baseURL: import.meta.env.VITE_API_BASE_URL || APP_BASE_PATH, timeout: 12000 })
 client.interceptors.request.use((config) => {
   const token = auth.token()
   if (token && config.url?.startsWith('/api/admin/')) config.headers.Authorization = `Bearer ${token}`
@@ -48,6 +49,7 @@ export const api = {
   login: (body: { username: string; password: string }) => client.post<LoginResponse>('/api/auth/login', body).then(r => r.data),
   logout: () => client.post('/api/admin/auth/logout').then(() => undefined),
   systems: (admin = false) => client.get<GatewaySystem[]>(admin ? '/api/admin/systems' : '/api/systems').then(r => r.data),
+  revealAccounts: (id: number, body: { username: string; password: string }) => client.post<RevealedSystemAccount[]>(`/api/systems/${id}/accounts/reveal`, body, { headers: { 'Cache-Control': 'no-store' } }).then(r => r.data),
   checkEndpoint: (id: number) => client.post<Endpoint>(`/api/endpoints/${id}/check`).then(r => r.data),
   createSystem: (body: Partial<GatewaySystem>) => client.post<GatewaySystem>('/api/admin/systems', body).then(r => r.data),
   updateSystem: (id: number, body: Partial<GatewaySystem>) => client.put<GatewaySystem>(`/api/admin/systems/${id}`, body).then(r => r.data),

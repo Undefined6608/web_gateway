@@ -19,6 +19,7 @@ export interface Endpoint {
   url: string
   requires_vpn: boolean
   is_internal_network: boolean
+  is_public_network: boolean
   remark: string | null
   check_status: CheckStatus
   last_http_status: number | null

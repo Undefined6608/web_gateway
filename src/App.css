@@ -53,6 +53,7 @@
 .system-status-closed { color: #69747f; background: #eef1f3; border-color: #d7dfe4; }
 .system-network-vpn { color: #8d5b0e; background: #fff6dc; border-color: #efd28b; }
 .system-network-internal { color: #27627f; background: #e6f3f8; border-color: #b9dce9; }
+.system-network-public { color: #176b4b; background: #e8f6ee; border-color: #bce5cd; }
 .system-card-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; flex: 0 0 auto; }
 .reveal-account-button { width: 30px; padding-inline: 0 !important; color: #245b61 !important; border-color: #b8d9d6 !important; background: #f5fbfa !important; }
 .reveal-account-button:hover { color: #0e7c76 !important; border-color: #0e7c76 !important; background: #e8f5f3 !important; }
@@ -76,7 +77,7 @@
 .endpoint-remark { min-width: 0; overflow: hidden; color: #687b86; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .endpoint-remark::before { content: '·'; margin-right: 8px; color: #b0bac1; }
 .endpoint-health { display: flex; align-items: center; gap: 7px; }
-.endpoint-flags { display: flex; align-items: center; gap: 5px; }
+.endpoint-flags { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
 .endpoint-flags .ant-tag { margin-inline-end: 0; }
 .metric { min-width: 64px; color: #66736f; font: 11px/1.4 Consolas, monospace; text-align: right; }
 .endpoint-error { color: #bd4b4b; font-size: 12px; cursor: help; }
@@ -175,7 +176,7 @@
 .admin-endpoint-copy a { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .admin-endpoint-copy > span { display: block; margin: 4px 0 0 48px; color: #87938f; font-size: 11px; }
 .admin-endpoint-actions { flex: 0 0 auto; }
-.admin-endpoint-flags { display: flex; align-items: center; gap: 5px; }
+.admin-endpoint-flags { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
 .admin-endpoint-flags .ant-tag { margin: 0; }
 .developer-manager { display: grid; gap: 18px; }
 .developer-manager > div { display: grid; grid-template-columns: 90px 1fr; align-items: center; gap: 12px; }
@@ -322,7 +323,7 @@
   .system-people { grid-template-columns: 1fr; }
   .system-people > div { border-right: 0; border-bottom: 1px solid #edf0ef; padding: 10px 17px; }
   .endpoint-row { grid-template-columns: minmax(0, 1fr); padding-left: 17px; }
-  .endpoint-health { display: none; }
+  .endpoint-health { grid-column: 1; align-items: flex-start; flex-wrap: wrap; }
   .endpoint-actions { grid-column: 1; justify-content: flex-end; }
   .public-footer { align-items: flex-start; flex-direction: column; justify-content: center; gap: 4px; }
   .admin-sider { display: none; }

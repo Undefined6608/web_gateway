@@ -105,8 +105,8 @@ export function SystemsAdminPage() {
     },
     {
       title: "网络",
-      width: 160,
-      render: (_, row) => row.endpoints.length ? `${row.endpoints.filter(endpoint => endpoint.requires_vpn).length} VPN / ${row.endpoints.filter(endpoint => endpoint.is_internal_network).length} 内网` : <span className="muted">无地址</span>,
+      width: 230,
+      render: (_, row) => row.endpoints.length ? `${row.endpoints.filter(endpoint => endpoint.requires_vpn).length} VPN / ${row.endpoints.filter(endpoint => endpoint.is_internal_network).length} 内网 / ${row.endpoints.filter(endpoint => endpoint.is_public_network).length} 公网` : <span className="muted">无地址</span>,
     },
     {
       title: "地址",

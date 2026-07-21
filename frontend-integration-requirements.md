@@ -26,7 +26,7 @@ Authorization: Bearer <access_token>
 - 系统负责人
 - 页面、后端、数据开发人员
 - 线上地址、测试地址
-- 每个地址各自的 VPN、公司内网和备注
+- 每个地址各自的 VPN、公司内网、公网和备注
 - 地址最近检测状态、HTTP 状态码、响应耗时、检测时间和失败原因
 - 地址重新检测按钮
 - 每条地址右侧的“查看账号密码”按钮
@@ -230,6 +230,7 @@ GET /api/systems
         "url": "https://example.com",
         "requires_vpn": true,
         "is_internal_network": true,
+        "is_public_network": false,
         "remark": "生产环境入口",
         "check_status": "healthy",
         "last_http_status": 200,
@@ -549,13 +550,15 @@ POST /api/admin/systems/{id}/endpoints
   "url": "https://example.com",
   "requires_vpn": true,
   "is_internal_network": true,
+  "is_public_network": false,
   "remark": "生产环境入口"
 }
 ```
 
 - 只允许 `http` 或 `https` URL。
 - 同一系统、同一地址类型已存在时执行更新。
-- VPN、公司内网和备注均属于当前地址。
+- `requires_vpn`、`is_internal_network`、`is_public_network` 是三个独立布尔属性，分别表示需要 VPN、公司内网、公网；它们与地址类型无关。
+- VPN、公司内网、公网和备注均属于当前地址，不属于整个系统。
 - 删除地址会同时删除关联账号，前端必须明确提示并二次确认。
 - 保存成功后后端立即请求一次该地址，并返回包含检测结果的地址对象。
 - 前端提交后应保持按钮加载状态，因为请求最长可能等待约 5 秒。

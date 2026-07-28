@@ -79,6 +79,8 @@
 .endpoint-health { display: flex; align-items: center; gap: 7px; }
 .endpoint-flags { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
 .endpoint-flags .ant-tag { margin-inline-end: 0; }
+.internal-access-note { display: inline-flex; align-items: center; gap: 5px; max-width: 190px; color: #5f6f79; font-size: 11px; line-height: 1.5; }
+.internal-access-note .anticon { flex: 0 0 auto; color: #4f7378; }
 .metric { min-width: 64px; color: #66736f; font: 11px/1.4 Consolas, monospace; text-align: right; }
 .endpoint-error { color: #bd4b4b; font-size: 12px; cursor: help; }
 .endpoint-actions { display: flex; align-items: center; gap: 6px; }

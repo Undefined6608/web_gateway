@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ExclamationCircleFilled, GlobalOutlined, LoadingOutlined, ReloadOutlined, SafetyCertificateOutlined, WifiOutlined } from '@ant-design/icons'
+import { ExclamationCircleFilled, GlobalOutlined, InfoCircleOutlined, LoadingOutlined, ReloadOutlined, SafetyCertificateOutlined, WifiOutlined } from '@ant-design/icons'
 import { Button, Tag, Tooltip, message } from 'antd'
 import dayjs from 'dayjs'
 import { checkMeta } from '../../config/systemMeta'
@@ -11,6 +11,7 @@ export function EndpointRow({ endpoint, systemName, onCheck }: { endpoint: Endpo
   const [checking, setChecking] = useState(false)
   const [cooldown, setCooldown] = useState(0)
   const meta = checkMeta[endpoint.check_status]
+  const isInternal = endpoint.is_internal_network
 
   useEffect(() => {
     if (!cooldown) return
@@ -19,6 +20,7 @@ export function EndpointRow({ endpoint, systemName, onCheck }: { endpoint: Endpo
   }, [cooldown])
 
   const check = async () => {
+    if (isInternal) return
     setChecking(true)
     try {
       await onCheck(endpoint.id)
@@ -32,10 +34,10 @@ export function EndpointRow({ endpoint, systemName, onCheck }: { endpoint: Endpo
   return <div className="endpoint-row">
     <div className="endpoint-main">
       <div className="endpoint-kind">{endpoint.endpoint_type === 'online' ? '线上' : '测试'}</div>
-      <div className="endpoint-url"><a href={endpoint.url} target="_blank" rel="noopener noreferrer"><span className="endpoint-link-text">{endpoint.url}</span><GlobalOutlined /></a><div className="endpoint-meta"><span className="endpoint-check-time">{endpoint.last_checked_at ? `检测于 ${dayjs(endpoint.last_checked_at).format('MM-DD HH:mm:ss')}` : '尚未检测'}</span>{endpoint.remark && <span className="endpoint-remark">{endpoint.remark}</span>}</div></div>
+      <div className="endpoint-url"><a href={endpoint.url} target="_blank" rel="noopener noreferrer"><span className="endpoint-link-text">{endpoint.url}</span><GlobalOutlined /></a><div className="endpoint-meta"><span className="endpoint-check-time">{isInternal ? '内网地址不进行连通性检测' : endpoint.last_checked_at ? `检测于 ${dayjs(endpoint.last_checked_at).format('MM-DD HH:mm:ss')}` : '尚未检测'}</span>{endpoint.remark && <span className="endpoint-remark">{endpoint.remark}</span>}</div></div>
     </div>
-    <div className="endpoint-health"><div className="endpoint-flags">{endpoint.requires_vpn && <Tag className="system-network-vpn" icon={<SafetyCertificateOutlined />}>需要 VPN</Tag>}{endpoint.is_internal_network && <Tag className="system-network-internal" icon={<WifiOutlined />}>公司内网</Tag>}{endpoint.is_public_network && <Tag className="system-network-public" icon={<GlobalOutlined />}>公网</Tag>}</div><Tag icon={meta.icon} color={meta.color}>{meta.label}</Tag><span className="metric">{endpoint.last_http_status ?? '--'} HTTP</span><span className="metric">{endpoint.last_response_time_ms != null ? `${endpoint.last_response_time_ms} ms` : '-- ms'}</span></div>
-    {endpoint.last_error && <Tooltip title={endpoint.last_error}><span className="endpoint-error"><ExclamationCircleFilled /> 失败原因</span></Tooltip>}
-    <div className="endpoint-actions"><AccountRevealDialog endpoint={endpoint} systemName={systemName} /><Tooltip title={cooldown ? `${cooldown} 秒后可重试` : '重新检测'}><Button className="icon-action" aria-label="重新检测" icon={checking ? <LoadingOutlined /> : <ReloadOutlined />} disabled={checking || cooldown > 0} onClick={check} /></Tooltip></div>
+    <div className="endpoint-health"><div className="endpoint-flags">{endpoint.requires_vpn && <Tag className="system-network-vpn" icon={<SafetyCertificateOutlined />}>需要 VPN</Tag>}{isInternal && <Tag className="system-network-internal" icon={<WifiOutlined />}>公司内网</Tag>}{endpoint.is_public_network && <Tag className="system-network-public" icon={<GlobalOutlined />}>公网</Tag>}</div>{isInternal ? <span className="internal-access-note"><InfoCircleOutlined /> 无法访问时，请联系负责人开通权限</span> : <><Tag icon={meta.icon} color={meta.color}>{meta.label}</Tag><span className="metric">{endpoint.last_http_status ?? '--'} HTTP</span><span className="metric">{endpoint.last_response_time_ms != null ? `${endpoint.last_response_time_ms} ms` : '-- ms'}</span></>}</div>
+    {!isInternal && endpoint.last_error && <Tooltip title={endpoint.last_error}><span className="endpoint-error"><ExclamationCircleFilled /> 失败原因</span></Tooltip>}
+    <div className="endpoint-actions"><AccountRevealDialog endpoint={endpoint} systemName={systemName} />{!isInternal && <Tooltip title={cooldown ? `${cooldown} 秒后可重试` : '重新检测'}><Button className="icon-action" aria-label="重新检测" icon={checking ? <LoadingOutlined /> : <ReloadOutlined />} disabled={checking || cooldown > 0} onClick={check} /></Tooltip>}</div>
   </div>
 }

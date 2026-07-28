@@ -149,6 +149,7 @@ function EndpointListItem({
   const [checking, setChecking] = useState(false)
 
   const check = async () => {
+    if (endpoint.is_internal_network) return
     setChecking(true)
     try {
       await api.checkEndpoint(endpoint.id)
@@ -172,13 +173,19 @@ function EndpointListItem({
           {endpoint.requires_vpn && <Tag className="system-network-vpn" icon={<SafetyCertificateOutlined />}>需要 VPN</Tag>}
           {endpoint.is_internal_network && <Tag className="system-network-internal" icon={<WifiOutlined />}>公司内网</Tag>}
           {endpoint.is_public_network && <Tag className="system-network-public" icon={<GlobalOutlined />}>公网</Tag>}
-          <Tag color={checkMeta[endpoint.check_status].color}>{checkMeta[endpoint.check_status].label}</Tag>
+          {endpoint.is_internal_network ? (
+            <Tooltip title="若无法访问，请联系负责人开通访问权限。">
+              <Tag>内网地址不检测</Tag>
+            </Tooltip>
+          ) : <Tag color={checkMeta[endpoint.check_status].color}>{checkMeta[endpoint.check_status].label}</Tag>}
         </div>
         <Space size={4}>
           <AccountRevealDialog endpoint={endpoint} systemName={system.name} />
-          <Tooltip title="重新检测">
-            <Button type="text" aria-label="重新检测" icon={checking ? <LoadingOutlined /> : <ReloadOutlined />} disabled={checking} onClick={check} />
-          </Tooltip>
+          {!endpoint.is_internal_network && (
+            <Tooltip title="重新检测">
+              <Button type="text" aria-label="重新检测" icon={checking ? <LoadingOutlined /> : <ReloadOutlined />} disabled={checking} onClick={check} />
+            </Tooltip>
+          )}
           <Tooltip title="编辑地址">
             <Button type="text" aria-label="编辑地址" icon={<EditOutlined />} onClick={onEdit} />
           </Tooltip>

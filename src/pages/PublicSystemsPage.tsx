@@ -80,7 +80,7 @@ export function PublicSystemsPage() {
             <i />
             服务目录
           </span>
-          <Button icon={<SettingOutlined />} onClick={() => navigate("/login")}>
+          <Button aria-label="进入系统管理" icon={<SettingOutlined />} onClick={() => navigate("/login")}>
             管理入口
           </Button>
         </div>
@@ -127,7 +127,7 @@ export function PublicSystemsPage() {
                 })),
               ]}
             />
-            <Button icon={<ReloadOutlined />} onClick={load}>
+            <Button aria-label="刷新目录" icon={<ReloadOutlined />} onClick={load}>
               刷新目录
             </Button>
           </div>

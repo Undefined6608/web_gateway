@@ -48,6 +48,8 @@ export interface Developer {
 export interface GatewaySystem {
   id: number
   name: string
+  sort_order: number
+  colorful_border: boolean
   lifecycle_status: LifecycleStatus
   owner_id: number | null
   description: string | null

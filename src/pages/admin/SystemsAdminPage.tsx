@@ -104,6 +104,12 @@ export function SystemsAdminPage() {
         row.owner?.name || <span className="muted">未配置</span>,
     },
     {
+      title: "排序值",
+      dataIndex: "sort_order",
+      width: 90,
+      render: (value) => <span className="sort-order-value">{value}</span>,
+    },
+    {
       title: "网络",
       width: 230,
       render: (_, row) => row.endpoints.length ? `${row.endpoints.filter(endpoint => endpoint.requires_vpn).length} VPN / ${row.endpoints.filter(endpoint => endpoint.is_internal_network).length} 内网 / ${row.endpoints.filter(endpoint => endpoint.is_public_network).length} 公网` : <span className="muted">无地址</span>,

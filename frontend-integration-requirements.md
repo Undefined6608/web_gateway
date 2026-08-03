@@ -22,6 +22,7 @@ Authorization: Bearer <access_token>
 展示全部系统，至少包含：
 
 - 系统名称
+- 系统排序值（数值越小越靠前）
 - 系统状态：维护、正常、已关闭
 - 系统负责人
 - 页面、后端、数据开发人员
@@ -30,6 +31,7 @@ Authorization: Bearer <access_token>
 - 地址最近检测状态、HTTP 状态码、响应耗时、检测时间和失败原因
 - 地址重新检测按钮
 - 每条地址右侧的“查看账号密码”按钮
+- 系统开启 `colorful_border` 时的炫彩重点边框
 
 交互要求：
 
@@ -103,7 +105,7 @@ Authorization: Bearer <access_token>
 | `online` | 线上地址 |
 | `test`   | 测试地址 |
 
-每个系统最多一个线上地址，测试地址可以有多个。
+线上地址和测试地址都可以有多个。
 
 ### 3.3 地址检测状态
 
@@ -204,6 +206,8 @@ GET /api/systems
   {
     "id": 1,
     "name": "订单系统",
+    "sort_order": 10,
+    "colorful_border": true,
     "lifecycle_status": "normal",
     "owner_id": 10,
     "description": "订单管理系统",
@@ -245,7 +249,7 @@ GET /api/systems
 ]
 ```
 
-该接口不会查询 `system_accounts`，响应中不会出现账号密码。
+该接口不会查询 `system_accounts`，响应中不会出现账号密码。列表按 `sort_order` 升序返回；排序值相同时按系统名称和 ID 升序返回。
 
 ### 6.2 获取系统详情
 
@@ -361,13 +365,15 @@ POST /api/admin/systems
 ```json
 {
   "name": "订单系统",
+  "sort_order": 10,
+  "colorful_border": true,
   "lifecycle_status": "normal",
   "owner_id": 10,
   "description": "订单管理系统"
 }
 ```
 
-`owner_id`、`description` 可以为 `null`。成功返回 `201` 和完整系统对象。
+`sort_order` 为非负整数，数值越小展示越靠前；`colorful_border` 控制是否显示炫彩重点边框。两个字段省略时分别默认为 `0` 和 `false`。`owner_id`、`description` 可以为 `null`。成功返回 `201` 和完整系统对象。
 
 ### 7.3 更新和删除系统
 
@@ -556,9 +562,8 @@ POST /api/admin/systems/{id}/endpoints
 ```
 
 - 只允许 `http` 或 `https` URL。
-- 新增时不传 `endpoint_id`：线上地址已存在则更新该线上地址，测试地址始终新增。
-- 编辑时传当前地址的 `endpoint_id`，后端只更新该地址；测试地址有多条时必须传该字段。
-- 每个系统最多一个线上地址，测试地址数量不限。将测试地址改为线上地址时，如该系统已有线上地址则返回 `409 conflict`。
+- 新增时不传 `endpoint_id`，每次都会创建一条新地址。
+- 编辑时传当前地址的 `endpoint_id`，后端只更新该地址；线上和测试地址均可配置多条，编辑时必须传该字段。
 - `requires_vpn`、`is_internal_network`、`is_public_network` 是三个独立布尔属性，分别表示需要 VPN、公司内网、公网；它们与地址类型无关。
 - VPN、公司内网、公网和备注均属于当前地址，不属于整个系统。
 - 删除地址会同时删除关联账号，前端必须明确提示并二次确认。

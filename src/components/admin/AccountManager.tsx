@@ -4,7 +4,7 @@ import { Button, Form, Input, Modal, Popconfirm, Select, Space, Switch, Table, T
 import { api, errorMessage } from '../../services/api'
 import type { GatewaySystem, SystemAccount } from '../../types/api'
 
-export function AccountManager({ system }: { system: GatewaySystem }) {
+export function AccountManager({ system, endpointFilter, onEndpointFilterChange }: { system: GatewaySystem; endpointFilter: number | null; onEndpointFilterChange: (endpointId: number | null) => void }) {
   const [accounts, setAccounts] = useState<SystemAccount[]>([])
   const [editing, setEditing] = useState<SystemAccount | null | undefined>(undefined)
   const [form] = Form.useForm()
@@ -13,7 +13,8 @@ export function AccountManager({ system }: { system: GatewaySystem }) {
   const endpointOptions = system.endpoints.map(endpoint => ({ value: endpoint.id, label: `${endpoint.endpoint_type === 'online' ? '线上' : '测试'} · ${endpoint.url}` }))
   const load = useCallback(async () => { try { setAccounts(await api.accounts(system.id)) } catch (error) { message.error(errorMessage(error)) } }, [system.id])
   useEffect(() => { void load() }, [load])
-  const open = (account: SystemAccount | null) => { setEditing(account); form.setFieldsValue(account ? { ...account, password: '' } : { endpoint_id: endpointOptions[0]?.value, role_name: '', account_name: '', password: '', is_enabled: true, remark: '' }) }
+  const visibleAccounts = endpointFilter == null ? accounts : accounts.filter(account => account.endpoint_id === endpointFilter)
+  const open = (account: SystemAccount | null) => { setEditing(account); form.setFieldsValue(account ? { ...account, password: '' } : { endpoint_id: endpointFilter ?? endpointOptions[0]?.value, role_name: '', account_name: '', password: '', is_enabled: true, remark: '' }) }
   const save = async () => {
     const values = await form.validateFields()
     setSaving(true)
@@ -33,6 +34,7 @@ export function AccountManager({ system }: { system: GatewaySystem }) {
 
   return <div className="manager-section">
     <div className="section-action"><Typography.Text type="secondary">账号必须关联一个地址。仅展示元数据，密码不会被读取或回填。</Typography.Text><Button icon={<PlusOutlined />} disabled={!system.endpoints.length} onClick={() => open(null)}>新增账号</Button></div>
+    {!!system.endpoints.length && <div className="account-filter"><span>地址筛选</span><Select allowClear placeholder="全部地址" value={endpointFilter ?? undefined} onChange={value => onEndpointFilterChange(value ?? null)} options={endpointOptions} /></div>}
     {!system.endpoints.length && <Typography.Paragraph type="warning">请先在“访问地址”中配置地址，再新增系统账号。</Typography.Paragraph>}
     <Table
       size="small"
@@ -40,7 +42,7 @@ export function AccountManager({ system }: { system: GatewaySystem }) {
       tableLayout="fixed"
       pagination={false}
       scroll={{ x: 680 }}
-      dataSource={accounts}
+      dataSource={visibleAccounts}
       columns={[
         {
           title: '所属地址',
